@@ -30,6 +30,8 @@ module Anemone
       :threads => 4,
       # Prevent page_queue from using excessive RAM. Can indirectly limit rate of crawling. You'll additionally want to use discard_page_bodies/discard_page_data and/or a non-memory 'storage' option
       :max_page_queue_size => 100,
+      # Don't limit the number of pages crawled.
+      :max_crawl_size => nil,
       # disable verbose output
       :verbose => false,
       # don't throw away the page response body after scanning it for links
@@ -165,19 +167,24 @@ module Anemone
 
       @urls.each{ |url| link_queue.enq(url) }
 
+      page_crawl_count = 0
+
       loop do
         page = page_queue.deq
+        page_crawl_count += 1
         @pages.touch_key page.url
         puts "#{page.url} Queue: #{link_queue.size}" if @opts[:verbose]
         do_page_blocks page
         page.discard_doc! if @opts[:discard_page_bodies]
 
-        links = links_to_follow page
-        links.each do |link|
-          link_queue << [link, page.url.dup, page.depth + 1]
+        if @opts[:max_crawl_size].nil? || @opts[:max_crawl_size] >= page_crawl_count
+          links = links_to_follow page
+          links.each do |link|
+            link_queue << [link, page.url.dup, page.depth + 1]
+          end
+          @pages.touch_keys links
         end
-        @pages.touch_keys links
-
+        
         if @opts[:discard_page_data]
           @pages[page.url] = true
         else
