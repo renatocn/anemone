@@ -54,16 +54,21 @@ module Anemone
     #
     # Array of distinct A tag HREFs from the page
     #
-    def links
-      return @links unless @links.nil?
+    def links(options = {})
+      return @links unless @links.nil? || (@included_anchor_text != options[:include_anchor_text])
       @links = []
       return @links if !doc
-
       doc.search("//a[@href]").each do |a|
         u = a['href']
         next if u.nil? or u.empty?
         abs = to_absolute(URI(URI.escape(u))) rescue next
-        @links << abs if in_domain?(abs)
+        if options[:include_anchor_text]
+          @included_anchor_text = true
+          @links << { url: abs.to_s, anchor_text: a.text } if in_domain?(abs)
+        else
+          @included_anchor_text = nil
+          @links << abs if in_domain?(abs)
+        end
       end
       @links.uniq!
       @links
