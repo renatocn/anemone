@@ -191,7 +191,13 @@ module Anemone
       do_after_crawl_blocks
       self
     end
-
+  
+    def stop_crawl
+      @tentacles.each do |thread| 
+        Thread.kill(thread) if thread.alive?
+      end
+    end
+    
     private
 
     def process_options
