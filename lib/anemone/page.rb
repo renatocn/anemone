@@ -61,7 +61,7 @@ module Anemone
       doc.search("//a[@href]").each do |a|
         u = a['href'].strip
         next if u.nil? or u.empty?
-        uri = URI(URI.escape(URI.unescape(u)))
+        uri = URI(URI.escape(URI.unescape(u))) rescue next
         abs = to_absolute(uri) rescue next
         if options[:include_anchor_text]
           @included_anchor_text = true
