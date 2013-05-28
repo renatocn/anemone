@@ -175,7 +175,9 @@ module Anemone
     # +false+ otherwise
     #
     def in_domain?(uri)
-      uri.host == @url.host
+      host = uri.host
+      # ignore case
+      host == @url.host || host == @url.host.capitalize || host == @url.host.upcase || host == @url.host.downcase
     end
 
     def marshal_dump
